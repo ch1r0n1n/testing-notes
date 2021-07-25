@@ -1,0 +1,51 @@
+1. Amass brute force
+	a. Amass enum -brute -w (dns wordlist) -d (domain) -o (output name)
+	b. Amass enum -d [domain] >> [output file name]
+	c. Amass enum -brute -active -d pdomain] -o amass-output.txt
+2. Subfinder
+	a. Subfinder -d [domain] -v
+3. FFUF
+	a. Ffuf -w [wordlist]:FUZZ -u http://FUZZ.[domain] -o [output]
+	b. Ffuf -ac -v -u [URL]/FUZZ -w [wordlist]
+4. Httprobe
+	a. Cat [domain list] | httprobe
+	A. Cat amass-output.txt | httprobe -p http:81 -p http:3000 -p https:3000 -p http:3001 -p https:3001 -p http:8000 -p http:8080 -p https:8443 -c 50 | tee online-domains.txt
+5. DNSGen
+	a. Cat online-domains.txt | dnsgen - | httprobe
+6. Httpx
+	a. Cat [domain list] | httpx
+7. Aquatone
+	a. Cat [domain list] | aquatone
+8. Anew
+	a. Cat [domain list] | anew subs.txt
+	b. Cat subs.txt | anew domains.txt | httprobe
+9. Waybackurls
+	a. Echo '[URL]' | waybackurls > wayback
+	b. Use wc -l to get the amount of lines in a file.
+10. Nuclei
+	a.  nuclei -l [target list] -t /usr/share/sniper/plugins/nuclei-templates/
+11. Wafwoof
+	a. wafw00f -i [domain list] - o [output name]
+12. GF:
+	1. cat subdomains.txt | waybackurls | sort -u >> waybackdata | gf ssrf | tee -a ssfrparams.txt
+	2. cat waybackdata | gf redirect | tee -a redirect.txt
+GF Patterns:
+	1. SSRF
+	2. XSS
+	3. REDIRECT
+	4. RCE
+	5. IDOR
+	6. SQLI
+	7. LFI
+	8. SSTI
+	9. DEBUG_LOGIC
+
+We can also use Sn1per to perform the initial recon and go from there. 
+
+What are our objectives for Bug Bounty?
+• Discover maximum amount of sub domains.
+• Determine what number of sub domains are live with httpx and httprobe. 
+• Discover what’s on the live pages with aquatone. 
+• Take live pages and scan them for content.
+• Manually explore webpages with most interesting content.
+Once we’ve fully explored webpages, test them for vulnerabilities.
