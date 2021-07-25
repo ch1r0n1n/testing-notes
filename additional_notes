@@ -1,0 +1,48 @@
+CODINGO:
+	1. To save a file we can pipe the 'tee' command
+	2. -s is for silent mode
+	3. Utilize the -f [filters] and -m[matching flags] to filter the results.
+	4. In some BB programs, we will need to identify ourselves via a custom header
+		a. -H "[Header data]"
+	5. Learn how to ingest our data from ffuf to Burp.
+	6. Fuzzing in multiple locations
+		a. Ffuf -u http://W2.io/W1 -w [wordlist:W1] -w [domains:W2]
+	7. Importing requests, we can take a request from Burp, select 'copy to file' from the request.
+		a. Edit the request with
+			i. GET /FUZZ HTTP/1.1
+		b. Next, run FFUF with the request flag
+			i. Ffuf -request [path to the request file] -w wordlist.
+	8. -mode pitchfork
+	9. -sf is the flag to stop on repeat errors
+	10. -p to delay in seconds
+		a. Changed to the -rate flag.
+	11. --replay-proxy http://127.0.0.1:8080 to relay the request to Burp
+	12. We can also use requests from our VPS and reroute that traffic to our LOCAL machine via a reverse SSH tunnel !
+		a. SSH from the destination to the source. Our machine to our VPS
+		b. Ssh -R [reverse] [random port to bind to:our address:standard port] [ssh connection] user@[vps address]
+		c. Ssh -R 1234:localhost:8080 chironin@192.168.1.1
+
+
+
+INSIDER_PHD:
+
+	1. Very common for API bug hunting.
+	2. We can use the -replay-proxy http://127.0.0.1:8080 to connect it to Burpsuite and produce the results there. 
+	3. We can create a delay with the -p flag to reduce the seconds in between requests
+		a. This was updated to -rate [rate amount]
+	4. We can FUZZ 2 values
+		a. Ffuf -w [wordlist].txt:FUZZ -w [2nd wordlist]:ME
+			i. These will become 2 fuzz parameters ffuf will scan.
+		b. Ffuf -w [wordlist].txt:FUZZ -w [2nd wordlist]:ME http:/127.0.0.1:8000/api/FUZZ/ME -o [output]
+	5. FFUF has 2 modes 
+		a. -mode clusterbomb
+		b. -mode pitchfork
+		c. Clusterbomb will do every value
+		d. Pitchfork will do how the wordlist is designed.
+	6. Ffuf can fuzz POST requests
+		a. Ffuf -w [wordlist] -X POST -d "[post data]=FUZZ"
+	7. Can fuzz parameters
+		a. Ffuf -w [wordlist] -X POST -d "email=ruowier@123.com&issue=qwert&FUZZ=test" -u [URL] -replay-proxy 127.0.0.1:8080
+		b. Ffuf -w [wordlist] -u [URL]/contact/submit?FUZZ=d%40d.com&issue=df  -replay-proxy 127.0.0.1:8080
+		c. Ffuf -w [wordlist] -X "PUT" -u [URL]/api.users/6 -H "[Host-data] Content-Type: application/json" -d "{'FUZZ' : 'test'}"  -replay-proxy 127.0.0.1:8080
+		
