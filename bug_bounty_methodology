@@ -18,6 +18,7 @@ BUG BOUNTY RECON METHODOLOGY
 		b. Cat online-domains.txt | httpx -status-code 
 4. Get a deeper collection of subdomains with DNSGEN
 		a. Cat online-domains.txt | dnsgen - | httprobe
+		b. cat online-domains.txt | dnsgen - | httprobe -p http:81 -p http:3000 -p https:3000 -p http:3001 -p https:3001 -p http:8000 -p http:8080 -p https:8443 -c 50 | tee DNSGEN_online-domains.txt
 5. Grep for all the domains with status code 200
 	e. Cat httpx.txt | grep 200
 	f. Save / edit responses to live.txt
