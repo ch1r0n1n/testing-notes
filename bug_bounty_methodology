@@ -15,6 +15,9 @@ FIND LIVE DOMAINS:
 		a. cat online-domains.txt | httpx -status-code -o httpx.txt | grep 200
 		b. Cat online-domains.txt | httpx -status-code 
 		c. cat subdomains.txt | httpx -o live-subdomains.txt
+DETECT WAF TO DISCOVER BYPASSES:
+	1. Wafw00f -i [domains list]
+	2. Wafw00f [URL]
 URL GATHERING:
 	1. GOSPIDER
 		a. gospider -S subdomains.txt -o output -c 10 -d 5
