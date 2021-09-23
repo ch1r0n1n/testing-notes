@@ -1,72 +1,88 @@
 RECON:
-	1. Subfinder
-		a. Subfinder -d [domain] -o [output]
-	2. AssetFinder
-		a. Assetfinder --subs-only [domain] > [output]
-	3. Subcert
-		a. python3 subcert.py -d cengage.com -o subcert_cengage.txt
-	4. AMASS
-		a. amass enum -brute -active -d cengage.com -o amass-output.txt
-FIND LIVE DOMAINS:
-	1. HTTProbe
-		a. Cat [domain list] | httprobe
-		b. Cat amass-output.txt | httprobe -p http:81 -p http:3000 -p https:3000 -p http:3001 -p https:3001 -p http:8000 -p http:8080 -p https:8443 -c 50 | tee online-domains.txt
-	2. HTTPX
-		a. cat online-domains.txt | httpx -status-code -o httpx.txt | grep 200
-		b. Cat online-domains.txt | httpx -status-code 
-		c. cat subdomains.txt | httpx -o live-subdomains.txt
-DETECT WAF TO DISCOVER BYPASSES:
+RECON ONE-LINERS:
+	1. Echo [domain] | subfinder -silent | httpx -silent| cariddi -intensive | tee results.txt
+SUBFINDER
+	a. Subfinder -d [domain] -o [output]
+ASSETFINDER
+	a. Assetfinder --subs-only [domain] > [output]
+SUBCERT
+	a. python3 subcert.py -d cengage.com -o subcert_cengage.txt
+AMASS
+	1. amass enum -brute -active -d cengage.com -o amass-output.txt
+
+
+SORT SUBDOMAINS:
+COMBINE ALL THE SUBDOMAINS AND SORT THEM: Look for weird names. Focus on these!!! 
+	1. Cat [subfinder] >> domains.txt
+	2. Cat [assetfinder] >> domains.txt
+	3. Cat [amass-output] >> domains.txt
+	4. Cat domains.txt | sort -u | tee unique_domains.txt
+
+
+DETERMINE LIVE SUBDOMAINS:
+HTTPROBE
+	a. Cat [domain list] | httprobe
+	b. Cat amass-output.txt | httprobe -p http:81 -p http:3000 -p https:3000 -p http:3001 -p https:3001 -p http:8000 -p http:8080 -p https:8443 -c 50 | tee online-domains.txt
+HTTPX
+	1. cat online-domains.txt | httpx -status-code -o httpx.txt | grep 200
+	2. Cat online-domains.txt | httpx -status-code 
+	3. cat subdomains.txt | httpx -o live-subdomains.txt
+
+
+SCREENSHOT SUBDOMAINS:
+AQUATONE
+	1. Cat live.txt | aquatone
+
+DETECT WAF:
+WAFW00F
 	1. Wafw00f -i [domains list]
 	2. Wafw00f [URL]
-URL GATHERING:
-	1. GOSPIDER
-		a. gospider -S subdomains.txt -o output -c 10 -d 5
-	2. GAU
-		a. Gau -subs [domain] -o [Output]
-		b. cat domains.txt | ~/go/bin/gau -t 5
-		c. Gau[domain] |grep -iE '\.js'|grep -ivE '\.json'|sort -u  >> paypalJS.txt
-		d. gau [domain] |grep -iE '\.js'|grep -ivE '\.json'|sort -u  >> paypalJS.txt
-	3. WAYBACKURLS:
-		a. Echo '[URL]' | waybackurls > wayback
-		b. Use wc -l to get the amount of lines in a file.
-		c. cat live.txt | waybackurls > wayback
-		d. cat live.txt | ~/go/bin/waybackurls > waybac
-	4. NUCLEI:
-		a. Check for low hanging fruit with Nuclei
-			a.  nuclei -l [target urlS list] -t /root/Desktop/tools/Nuclei-Templates/
-JAVASCRIPT GATHERING:
-	1. Collect JS files & use LinkFinder to get endpoints
-	2. SECRETFINDER:
-		a. Analyzing an entire domain and its JS files:
-		b. python3 SecretFinder.py -i https://example.com/ -e
-	3. LINKFINDER:
-		a. Run LinkFinder to find more endpoints / relative-url-extractor
-		b. python linkfinder.py -i https://example.com/1.js -o results.html
-		c. Most basic usage to find endpoints in an online JavaScript file and output the HTML results to results.html:
-			1. python linkfinder.py -i https://example.com/1.js -o results.html
-		d. Enumerating an entire folder for JavaScript files, while looking for endpoints starting with /api/ and finally saving the results to results.html:
-			1. python linkfinder.py -i 'Desktop/*.js' -r ^/api/ -o results.html
-		e. Analyzing an entire domain and its JS files:
-			1. python linkfinder.py -i https://example.com -d
-		f. Append the discovered endpoints discovered to the domain.
-		g. Attempt to add discovered parameters to the url.
-		h. Run nmap to find open ports and services. Figure how to exploit them. 
-		i. After we pick our target, spend a day on EACH SUBDOMAIN!
-		j. We have to be consistent with a single target if we want to find legit bugs!
-		k. Focus on exploiting manually and less with tools. 
-		l. This builds our skill set WAY easier than relying on tools.
-	4. JSFScan.sh
-		a. ./JSFScan.sh -l target.txt --all -r -o [OUTPUT DIRECTORY]
-	5. FUZZING WITH FFUF:
-		a. Fuzz directories and parameters
-		b. Fuzz accepted symbols
-		c. Fuzz encodings
-PARAMETER MINING FOR THE FOLLOWING:
-	1. OPEN REDIRECT
-	2. SSRF
-	3. XXE
-	4. XXS / KNOXSS
-GF:
+
+
+NUCLEI FOR LOW-HANGING FRUIT:
+	1. nuclei -l [target urlS list] -t /root/Desktop/tools/Nuclei-Templates/
+
+
+DETERMINE SUBDOMAINS TO TEST:
+	1. Go through subdomain list and find uniquely named domains.
+
+CONTENT DISCOVERY:
+BURP:
+	1. Right click hostname => Click Engagement Tools => Discover Content through Burp[This should be step #1 in our methodology]
+		a. This gets a listing of all the directories, files, and parameters Burp can locate for us to test. 
+	2. Use the Intruder to fuzz parameters / for parameters.
+
+DIRECTORY BUSTING:
+FFUF
+	1. Ffuf -w [wordlist]:FUZZ -u http://FUZZ.[domain] -o [output]
+	2. Ffuf -ac -v -u [URL]/FUZZ -w [wordlist]
+
+GATHER URLS:
+	1. gospider -S subdomains.txt -o output -c 10 -d 5
+	2. gospider -S live.txt -o output -c 10 -d 3 --subs -q
+
+WAYBACKURLS:
+	1. Cat unique_domains.txt | waybackurls >> wayback
+	2. Echo '[URL]' | waybackurls > wayback
+	3. Use wc -l to get the amount of lines in a file.
+	4. cat live.txt | waybackurls > wayback
+	5. cat live.txt | ~/go/bin/waybackurls > wayback
+
+GAU
+	1. Gau -subs [domain] -o [Output]
+	2. cat domains.txt | ~/go/bin/gau -t 5
+	3. Gau[domain] |grep -iE '\.js'|grep -ivE '\.json'|sort -u  >> paypalJS.txt
+	4. gau [domain] |grep -iE '\.js'|grep -ivE '\.json'|sort -u  >> paypalJS.txt
+
+
+
+PARAMETER FUZZING:
+FFUF
+	1. ffuf -u 'http://MACHINE_IP/sqli-labs/Less-1/?FUZZ=1' -c -w /usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt -fw 39
+	2. ffuf -u 'http://MACHINE_IP/sqli-labs/Less-1/?FUZZ=1' -c -w /usr/share/seclists/Discovery/Web-Content/raft-medium-words-lowercase.txt -fw 39
+
+
+GF PARAMETERS:
 	1. Gather URLS from target[s]
 	2. Navigate to ParamSpider output folder
 	3. python3 paramspider.py --domain hackerone.com --exclude php,jpg --output hackerone.txt
