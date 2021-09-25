@@ -13,6 +13,7 @@ AMASS
 
 SORT SUBDOMAINS:
 COMBINE ALL THE SUBDOMAINS AND SORT THEM: Look for weird names. Focus on these!!! 
+	• Staging, Dev, Payment, internal, qa, backup, and other uncommon names.
 	1. Cat [subfinder] >> domains.txt
 	2. Cat [assetfinder] >> domains.txt
 	3. Cat [amass-output] >> domains.txt
